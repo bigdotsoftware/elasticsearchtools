@@ -1,0 +1,44 @@
+{
+   "query": {
+      "bool": {
+         "filter": {
+            "range": {
+               "@timestamp": {
+                  "gte": "now-5h"
+               }
+            }
+         }
+      }
+   },
+   "size": 0,
+   "aggs": {
+      "byhour": {
+         "date_histogram": {
+            "field": "@timestamp",
+            "interval": "hour"
+         },
+         "aggs": {
+            "system.cpu.user.pct": {
+               "avg": {
+                  "field": "system.cpu.user.pct"
+               }
+            },
+            "system.cpu.system.pct": {
+               "avg": {
+                  "field": "system.cpu.system.pct"
+               }
+            },
+            "system.memory.used.bytes": {
+               "avg": {
+                  "field": "system.memory.used.bytes"
+               }
+            },
+            "system.memory.used.pct": {
+               "avg": {
+                  "field": "system.memory.used.pct"
+               }
+            }
+         }
+      }
+   }
+}

@@ -1,0 +1,11 @@
+{
+  "sort": ["_doc"],
+  "size": 50,
+  "query": {
+    "bool": {
+      "must": {
+        "match_all": {}
+      }
+    }
+  }
+}
