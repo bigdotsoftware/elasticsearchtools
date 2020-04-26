@@ -1,0 +1,83 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1d"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "metricbeat-*"
+        ],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "query": {
+            "bool": {
+              "filter": {
+                "range": {
+                  "@timestamp": {
+                    "gt": "now-1d/d",
+                    "lt": "now/d"
+                  }
+                }
+              }
+            }
+          },
+          "size": 0,
+          "aggs": {
+            "byhour": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "interval": "hour"
+              },
+              "aggs": {
+                "system.cpu.user.pct": {
+                  "avg": {
+                    "field": "system.cpu.user.pct"
+                  }
+                },
+                "system.cpu.system.pct": {
+                  "avg": {
+                    "field": "system.cpu.system.pct"
+                  }
+                },
+                "system.memory.used.bytes": {
+                  "avg": {
+                    "field": "system.memory.used.bytes"
+                  }
+                },
+                "system.memory.used.pct": {
+                  "avg": {
+                    "field": "system.memory.used.pct"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.took": {
+        "gte": 0
+      }
+    }
+  },
+  "actions": {
+    "my-logging-action": {
+      "logging": {
+        "level": "info",
+        "text": "Calculating aggregations from previous day."
+      }
+    },
+    "index_1": {
+      "index": {
+        "index": "metricbeat-agg-values-by-watcher"
+      }
+    }
+  }
+}

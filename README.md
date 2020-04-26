@@ -1,3 +1,4 @@
+
 ## Aggregate indices
 
 It's always a good practice to keep pre-aggregated data wherever possible. For instance, do you need an information from past month about memory allocation and CPU usage with minute resolution? I bet now, so below is a very simple approach how to aggregate data and keep in in separate index.
@@ -8,6 +9,13 @@ Below example takes all documents from past 5h and aggregates them. So it's fine
 ./aggregate_beats_metrics.sh 'localhost:9200' 'metricbeat-*' 'metricsaggregation.json' 'metricbeat-agg'
  </code>
  
+Alternatively, you may consider of using watcher (paid licence only). The workaround is to execute watcher once per day to calculate aggregations from the previous day. Personally I prefer and recommend first option with bash and cron, however such approach can be valuable in some use-cases.
+
+ <code>
+curl -XPUT 'http://localhost:9200/_watcher/watch/my-metricsaggregation-watch' -H 'Content-Type: application/json' -d @watcher.json
+</code>
+
+
 ## Documents export
 
 Below example shows how to scan an index from bash. You can change query.json to tune up.
