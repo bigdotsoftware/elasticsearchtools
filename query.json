@@ -1,6 +1,6 @@
 {
   "sort": ["_doc"],
-  "size": 50,
+  "size": 500,
   "query": {
     "bool": {
       "must": {

@@ -5,7 +5,7 @@ if ! [ -x "$(command -v jq)" ]; then
   exit 1
 fi
 
-# format: my-es-host:9200
+# in format: my-es-host:9200
 es_url=$1
 index=$2
 queryfile=$3
@@ -27,16 +27,28 @@ fi
 suffix=_pagescan_
 pagescan=1
 
-echo $response | jq '.hits.hits' > $outputfolder/$index$suffix$pagescan.json
+echo "#!/bin/bash" > $outputfolder/import_$index.sh
+
+echo "${response}" | jq -c '.hits.hits' > $outputfolder/$index$suffix$pagescan.json
+jq -c '.[]|{index:{_index:._index, _type:._type,_id:._id}},._source' $outputfolder/$index$suffix$pagescan.json > $outputfolder/bulk_$index$suffix$pagescan.json
+echo "curl -XPOST http://localhost:9200/_bulk -H 'Content-Type: application/x-ndjson' --data-binary \"@bulk_$index$suffix$pagescan.json\"" >> $outputfolder/import_$index.sh
+echo "echo \"\"" >> $outputfolder/import_$index.sh
+echo "echo \"------\"" >> $outputfolder/import_$index.sh
+
 pagescan=$((pagescan+1))
-  
+
 while [ "$hits_count" != "0" ]; do
   response=$(curl -H 'Content-Type: application/json' -s $es_url/_search/scroll -d "{ \"scroll\": \"1m\", \"scroll_id\": \"$scroll_id\" }")
   scroll_id=$(echo $response | jq -r ._scroll_id)
   hits_count=$(echo $response | jq -r '.hits.hits | length')
   hits_so_far=$((hits_so_far + hits_count))
   echo "Got response with $hits_count hits (hits so far: $hits_so_far), new scroll ID $scroll_id"
-  echo $response | jq '.hits.hits' > $outputfolder/$index$suffix$pagescan.json
+  echo "${response}" | jq -c '.hits.hits' > $outputfolder/$index$suffix$pagescan.json
+  jq -c '.[]|{index:{_index:._index, _type:._type,_id:._id}},._source' $outputfolder/$index$suffix$pagescan.json > $outputfolder/bulk_$index$suffix$pagescan.json
+  echo "curl -XPOST http://localhost:9200/_bulk -H 'Content-Type: application/x-ndjson' --data-binary \"@bulk_$index$suffix$pagescan.json\"" >> $outputfolder/import_$index.sh
+  echo "echo \"\"" >> $outputfolder/import_$index.sh
+  echo "echo \"------\"" >> $outputfolder/import_$index.sh
+  #processhits "$response" "$outputfolder/$index$suffix$pagescan.json"
   pagescan=$((pagescan+1))
 done
 
